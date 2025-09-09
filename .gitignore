@@ -426,3 +426,5 @@ FodyWeavers.xsd
 go.work
 
 # End of https://www.toptal.com/developers/gitignore/api/go,csharp,dotenv
+
+postgres_podaci/*
