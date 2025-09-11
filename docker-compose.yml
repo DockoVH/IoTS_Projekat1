@@ -15,16 +15,33 @@ services:
       - mreza
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U root -d test_db"]
-      interval: 5s
-      timeout: 5s
+      interval: 3s
+      timeout: 3s
       retries: 5
 
-  DataManager:
+  datamanager:
     container_name: iots_data_manager
-    image: data_manager
+    build: ./DataManager
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - mreza
+    ports:
+      - 5050:5050
+    #healthcheck:
+     # test: ["CMD", "bash", "health.sh"]
+      #interval: 5s
+      #timeout: 5s
+      #retries: 5
+      #start_period: 10s
+
+  gateway:
+    container_name: iots_gateway
+    build: ./Gateway
+    depends_on:
+      - datamanager
+        #condition: service_healthy
     networks:
       - mreza
     ports:

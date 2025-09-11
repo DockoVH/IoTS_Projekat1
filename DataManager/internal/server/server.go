@@ -180,9 +180,15 @@ func (s *server) IzmeniSenzorPodatak(ctx context.Context, sp *senzorPodaci.Senzo
 	}
 	defer conn.Close(ctx)
 
-	if _, err := conn.Exec(ctx, "UPDATE senzor_podaci SET temperatura = $1, vlaznost_vazduha = $2, pm2_5 = $3, pm10 = $4 WHERE id = $5", sp.Temperatura, sp.VlaznostVazduha, sp.Pm2_5, sp.Pm10, sp.Id); err != nil {
+	tag, err := conn.Exec(ctx, "UPDATE senzor_podaci SET temperatura = $1, vlaznost_vazduha = $2, pm2_5 = $3, pm10 = $4 WHERE id = $5", sp.Temperatura, sp.VlaznostVazduha, sp.Pm2_5, sp.Pm10, sp.Id)
+	if err != nil {
 		log.Print("IzmeniSenzorPodatak(): Greška prilikom izmene podatka: ", err)
 		return wrapperspb.Bool(false), status.Error(status.Code(err), err.Error())
+	}
+	if tag.RowsAffected() != 1 {
+		poruka := fmt.Sprintf("Ne postoji podatak sa id: %v", sp.Id)
+		log.Print("IzmeniSenzorPodatak(): Greška prilikom brisanja podatka: ", poruka)
+		return wrapperspb.Bool(false), status.Error(codes.NotFound, poruka)
 	}
 
 	log.Print("Podatak uspešno izmenjen.")
@@ -232,7 +238,9 @@ func (s *server) SviSenzorPodaciPeriod(vp *senzorPodaci.VremenskiPeriod, stream 
 		return status.Error(status.Code(err), err.Error())
 	}
 
+	brojRedova := 0
 	for rows.Next() {
+		brojRedova++
 		var podatak senzorPodaci.SenzorPodatak
 
 		vrednosti, err := rows.Values()
@@ -275,19 +283,23 @@ func (s *server) SviSenzorPodaciPeriod(vp *senzorPodaci.VremenskiPeriod, stream 
 		}
 	}
 
+	if brojRedova == 0 {
+		return status.Error(codes.NotFound, "Nema podata u datom vremenskom periodu.")
+	}
+
 	log.Print("Svi podaci uspešno pribavljeni.")
 	return nil
 }
 
 func Start() {
-	lis, err := net.Listen("tcp", ":" + os.Getenv("DM_PORT"))
-	if err != nil {
-		log.Fatal("Greska net.Listen: ", err)
-	}
-
 	if err := godotenv.Load(".env"); err != nil {
 		log.Print("Greška prilikom učitavanja .env fajla: ", err)
 		return
+	}
+
+	lis, err := net.Listen("tcp", "0.0.0.0:" + os.Getenv("DM_PORT"))
+	if err != nil {
+		log.Fatal("Greska net.Listen: ", err)
 	}
 
 	grpcServer := grpc.NewServer()
