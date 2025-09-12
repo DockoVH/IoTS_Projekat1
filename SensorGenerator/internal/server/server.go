@@ -46,9 +46,7 @@ func Pisi() {
 		time.Sleep(10 * time.Second)
 	}
 
-	brojCSVFajlova := 1
-
-	for i := 1; i <= brojCSVFajlova; i++ {
+	for i := 18; i <= 18; i++ {
 		putanja := fmt.Sprintf("/api/cmd/api/datasetovi/%v.csv", i)
 		log.Print(putanja)
 
