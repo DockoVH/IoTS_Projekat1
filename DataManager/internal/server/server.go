@@ -98,7 +98,7 @@ func (s *server) SviSenzorPodaci(_ *emptypb.Empty, stream grpc.ServerStreamingSe
 	}
 	defer conn.Close(ctx)
 
-	rows, err := conn.Query(ctx, "select * from senzor_podaci")
+	rows, err := conn.Query(ctx, "select * from senzor_podaci WHERE ID > 0")
 	if err != nil {
 		log.Print("SviSenzorPodaci(): Greška prilikom pribavljanja podatka: ", err)
 		return status.Error(status.Code(err), err.Error())
@@ -232,7 +232,7 @@ func (s *server) SviSenzorPodaciPeriod(vp *senzorPodaci.VremenskiPeriod, stream 
 	}
 	defer conn.Close(ctx)
 
-	rows, err := conn.Query(ctx, "select * from senzor_podaci WHERE vreme BETWEEN $1 AND $2", vp.Pocetak.AsTime(), vp.Kraj.AsTime())
+	rows, err := conn.Query(ctx, "select * from senzor_podaci WHERE vreme BETWEEN $1 AND $2 AND ID > 0", vp.Pocetak.AsTime(), vp.Kraj.AsTime())
 	if err != nil {
 		log.Print("SviSenzorPodaciPeriod(): Greška prilikom pribavljanja podatka: ", err)
 		return status.Error(status.Code(err), err.Error())

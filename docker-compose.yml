@@ -29,23 +29,24 @@ services:
       - mreza
     ports:
       - 5050:5050
-    #healthcheck:
-     # test: ["CMD", "bash", "health.sh"]
-      #interval: 5s
-      #timeout: 5s
-      #retries: 5
-      #start_period: 10s
 
   gateway:
     container_name: iots_gateway
     build: ./Gateway
     depends_on:
       - datamanager
-        #condition: service_healthy
     networks:
       - mreza
     ports:
       - 8080:8080
+
+  sensorgenerator:
+    container_name: iots_sensor_generator
+    build: ./SensorGenerator
+    depends_on:
+      - gateway
+    networks:
+      - mreza
 
 networks:
   mreza:
