@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"bytes"
 	"io"
+	"errors"
 )
 
 type senzorPodatak struct {
@@ -22,11 +23,11 @@ type senzorPodatak struct {
 	Pm10 float64
 }
 
-func Pisi() {
+func Healthcheck() error {
 	greska := 0
 	for {
 		if greska == 10 {
-			log.Fatal("SenzorGenerator nije pokrenut.")
+			return errors.New(fmt.Sprintf("Konektovanje sa Gateway servisom nije uspelo nakon %v pokušaja.", greska))
 		}
 
 		res, err := http.Get("http://gateway:8080/api/SenzorPodaci/VratiSenzorPodatak/0")
@@ -39,13 +40,15 @@ func Pisi() {
 		}
 
 		if res.StatusCode == 200 {
-			break
+			return nil
 		}
 
 		greska++
 		time.Sleep(10 * time.Second)
 	}
+}
 
+func Pisi() {
 	for i := 18; i <= 18; i++ {
 		putanja := fmt.Sprintf("/api/cmd/api/datasetovi/%v.csv", i)
 		log.Print(putanja)
@@ -89,7 +92,10 @@ func Pisi() {
 
 			defer resp.Body.Close()
 
-			body, _ := io.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Printf("[fajl: %v]: io.ReadAll(resp.Body) greška: %v\n", putanja, err)
+			}
 			log.Printf("[%v]: %s\n", resp.Status, string(body))
 
 			time.Sleep(time.Second)
