@@ -1,5 +1,7 @@
 # IoTS_Projekat1
 
+https://ieee-dataport.org/open-access/airiot-iot-based-air-pollution-monitoring
+
 ### DataManager
   * Servis zadužen za upravljanje podacima. Sadrži sledeće gRPC servise:
   
